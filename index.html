@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earn Daily</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a2e; color: #fff; margin: 0; padding: 20px; text-align: center; }
+        .card { background: #16213e; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .balance { font-size: 32px; color: #00fff5; font-weight: bold; }
+        .badge-pro { background: #f39c12; color: #000; padding: 3px 8px; border-radius: 5px; font-size: 14px; font-weight: bold; }
+        .btn { background: #e94560; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
+        .btn-pro { background: #f1c40f; color: #000; }
+        .btn:disabled { background: #555; }
+        input, select { width: 90%; padding: 10px; margin: 8px 0; border-radius: 5px; border: none; }
+    </style>
+</head>
+<body>
+
+    <h2>Earn Daily <span id="pro-tag" class="badge-pro" style="display:none;">PRO</span></h2>
+
+    <div class="card">
+        <p>আপনার ব্যালেন্স</p>
+        <div class="balance"><span id="user-balance">0</span> Points</div>
+    </div>
+
+    <!-- Pro Account Section -->
+    <div class="card" id="pro-card">
+        <h3>Upgrade to PRO 🚀</h3>
+        <p>Pro ইউজাররা পাবেন প্রতিটি এডে ২x ইনকাম!</p>
+        <p>ফি: <b>২৫০৳</b> (Send Money)</p>
+        <p>bKash / Nagad Personal: <b>01315606986</b></p>
+        
+        <select id="dep-method">
+            <option value="bKash">bKash</option>
+            <option value="Nagad">Nagad</option>
+        </select>
+        <input type="text" id="trx-id" placeholder="Transaction ID (TrxID)">
+        <button class="btn btn-pro" onclick="submitDeposit()">Submit Deposit</button>
+    </div>
+
+    <div class="card">
+        <h3>Watch & Earn Unlimited</h3>
+        <p>এড দেখুন এবং আনলিমিটেড পয়েন্ট আয় করুন!</p>
+        <button class="btn" id="ad-btn" onclick="watchAd()">Watch Ad</button>
+        <p id="timer-text" style="color:#f39c12; display:none;">১০ সেকেন্ড অপেক্ষা করুন...</p>
+    </div>
+
+    <div class="card">
+        <h3>উইথড্র করুন</h3>
+        <select id="method">
+            <option value="bKash">bKash</option>
+            <option value="Nagad">Nagad</option>
+        </select>
+        <input type="text" id="number" placeholder="মোবাইল নম্বর">
+        <input type="number" id="points" placeholder="পয়েন্ট পরিমাণ (Min 1000)">
+        <button class="btn" style="background: #27ae60;" onclick="withdraw()">Withdraw Request</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Render-এ হোস্ট করার পর পাওয়া URL পরবর্তীতে এখানে বসাবো
+        const BACKEND_URL = "https://your-backend-url.onrender.com";
+        let currentUser = tg.initDataUnsafe?.user || { id: 12345678, username: "TestUser" };
+        let adLink = "";
+
+        async function loadUser() {
+            try {
+                let res = await fetch(`${BACKEND_URL}/api/user`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: currentUser.id, username: currentUser.username })
+                });
+                let data = await res.json();
+                document.getElementById('user-balance').innerText = data.user.balance;
+                adLink = data.settings.adLink;
+
+                if (data.user.isPro) {
+                    document.getElementById('pro-tag').style.display = 'inline-block';
+                    document.getElementById('pro-card').style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Server Error", err);
+            }
+        }
+
+        async function submitDeposit() {
+            let method = document.getElementById('dep-method').value;
+            let trxId = document.getElementById('trx-id').value;
+
+            if (!trxId) {
+                alert("Transaction ID দিন!");
+                return;
+            }
+
+            let res = await fetch(`${BACKEND_URL}/api/deposit-pro`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: currentUser.id, method, trxId })
+            });
+            let data = await res.json();
+
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('trx-id').value = "";
+            } else {
+                alert(data.error);
+            }
+        }
+
+        function watchAd() {
+            if (!adLink) {
+                alert("Ad link not configured!");
+                return;
+            }
+
+            window.open(adLink, '_blank');
+
+            let btn = document.getElementById('ad-btn');
+            let timerText = document.getElementById('timer-text');
+            btn.disabled = true;
+            timerText.style.display = 'block';
+
+            setTimeout(async () => {
+                let res = await fetch(`${BACKEND_URL}/api/claim-ad`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: currentUser.id })
+                });
+                let data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('user-balance').innerText = data.newBalance;
+                    alert(data.message);
+                }
+                btn.disabled = false;
+                timerText.style.display = 'none';
+            }, 10000);
+        }
+
+        async function withdraw() {
+            let method = document.getElementById('method').value;
+            let number = document.getElementById('number').value;
+            let points = parseInt(document.getElementById('points').value);
+
+            if (!number || !points) {
+                alert("সবগুলো তথ্য সঠিকভাবে দিন!");
+                return;
+            }
+
+            let res = await fetch(`${BACKEND_URL}/api/withdraw`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: currentUser.id, method, number, amount: points })
+            });
+            let data = await res.json();
+
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('user-balance').innerText = data.newBalance;
+            } else {
+                alert(data.error);
+            }
+        }
+
+        loadUser();
+    </script>
+</body>
+</html>
