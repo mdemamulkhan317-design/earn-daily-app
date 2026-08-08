@@ -1,213 +1,602 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Earn Daily</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a2e; color: #fff; margin: 0; padding: 20px; text-align: center; }
-        .card { background: #16213e; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-        .balance { font-size: 32px; color: #00fff5; font-weight: bold; }
-        .badge-pro { background: #f39c12; color: #000; padding: 3px 8px; border-radius: 5px; font-size: 14px; font-weight: bold; }
-        .btn { background: #e94560; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
-        .btn-pro { background: #f1c40f; color: #000; }
-        .btn:disabled { background: #555; cursor: not-allowed; }
-        input, select { width: 90%; padding: 10px; margin: 8px 0; border-radius: 5px; border: none; box-sizing: border-box; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EMAMUL 2.0</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#101922;
+  --card:#1c2936;
+  --card2:#263748;
+  --text:#f5f7fa;
+  --muted:#8fa0af;
+  --blue:#2d9cf4;
+  --green:#27c991;
+  --red:#ff5d73;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,system-ui,sans-serif;
+}
+.app{
+  max-width:720px;
+  margin:auto;
+  padding:18px 16px 100px;
+}
+.page{display:none}
+.page.active{display:block}
+
+/* Header */
+.hero{text-align:center;padding:25px 0 18px}
+.logo{
+  width:112px;height:112px;
+  margin:auto;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(145deg,#61b5ff,#398dd6);
+  font-size:58px;
+  font-weight:800;
+  box-shadow:0 10px 30px #0005;
+}
+.hero h1{font-size:31px;margin:17px 0 4px}
+.hero p{color:var(--muted);margin:0}
+
+/* Cards */
+.card{
+  background:var(--card);
+  border-radius:21px;
+  padding:18px;
+  margin:14px 0;
+}
+.balance{
+  text-align:center;
+  padding:25px;
+}
+.balance .amount{
+  font-size:36px;
+  font-weight:800;
+  margin:8px 0;
+}
+.small{font-size:13px;color:var(--muted)}
+.row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+/* Grid */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.tile{
+  border:0;
+  background:var(--card2);
+  color:white;
+  border-radius:18px;
+  padding:20px 15px;
+  text-align:left;
+  cursor:pointer;
+  min-height:120px;
+}
+.tile .icon{font-size:30px}
+.tile b{display:block;font-size:17px;margin:10px 0 4px}
+
+/* Buttons */
+.btn{
+  width:100%;
+  border:0;
+  border-radius:14px;
+  padding:14px;
+  background:var(--blue);
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:10px;
+}
+.btn.secondary{background:var(--card2)}
+.btn.green{background:var(--green)}
+.btn.red{background:var(--red)}
+
+/* Products */
+.product{
+  background:var(--card);
+  border-radius:18px;
+  padding:17px;
+  margin:12px 0;
+}
+.product h3{margin:0 0 7px}
+.price{
+  font-size:20px;
+  font-weight:bold;
+  color:#55b2ff;
+}
+
+/* Profile */
+.avatar{
+  width:75px;height:75px;
+  border-radius:50%;
+  background:linear-gradient(145deg,#5cb4ff,#398bd2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:34px;
+  font-weight:bold;
+  margin:0 auto 12px;
+}
+.info{
+  background:var(--card2);
+  border-radius:14px;
+  padding:14px;
+  margin:8px 0;
+}
+
+/* Bottom navigation */
+.nav{
+  position:fixed;
+  z-index:10;
+  bottom:12px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(680px,calc(100% - 24px));
+  background:#1d2d3c;
+  border-radius:28px;
+  padding:8px;
+  display:flex;
+  justify-content:space-around;
+  box-shadow:0 8px 30px #0006;
+}
+.nav button{
+  border:0;
+  background:transparent;
+  color:#93a5b5;
+  font-weight:bold;
+  padding:7px 12px;
+  border-radius:20px;
+  font-size:13px;
+}
+.nav button.active{
+  background:#263e54;
+  color:#35a5ff;
+}
+
+/* Notice */
+.notice{
+  background:#29271d;
+  color:#f2cf71;
+  border-radius:14px;
+  padding:13px;
+  margin-top:15px;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.empty{
+  text-align:center;
+  padding:35px 15px;
+  color:var(--muted);
+}
+</style>
 </head>
+
 <body>
 
-    <h2>Earn Daily <span id="pro-tag" class="badge-pro" style="display:none;">PRO</span></h2>
+<div class="app">
 
-    <div class="card">
-        <p>আপনার ব্যালেন্স</p>
-        <div class="balance"><span id="user-balance">0</span> Points</div>
+<!-- HOME -->
+<section id="home" class="page active">
+
+  <div class="hero">
+    <div class="logo">E</div>
+    <h1>EMAMUL 2.0</h1>
+    <p>Telegram Mini App</p>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="small">Welcome</div>
+        <strong id="welcomeName">Telegram User</strong>
+      </div>
+      <div class="small" id="telegramId">Guest</div>
+    </div>
+  </div>
+
+  <div class="card balance">
+    <div class="small">Demo Account Balance</div>
+    <div class="amount">৳0.00</div>
+    <div class="small">Demo balance only</div>
+  </div>
+
+  <div class="grid">
+
+    <button class="tile" onclick="openPage('products')">
+      <div class="icon">🛍️</div>
+      <b>Products</b>
+      <span class="small">Browse products</span>
+    </button>
+
+    <button class="tile" onclick="openPage('orders')">
+      <div class="icon">📦</div>
+      <b>My Orders</b>
+      <span class="small">View your orders</span>
+    </button>
+
+    <button class="tile" onclick="openPage('profile')">
+      <div class="icon">👤</div>
+      <b>Profile</b>
+      <span class="small">Account information</span>
+    </button>
+
+    <button class="tile" onclick="showNotice()">
+      <div class="icon">ℹ️</div>
+      <b>About</b>
+      <span class="small">About EMAMUL 2.0</span>
+    </button>
+
+  </div>
+
+  <div class="notice">
+    এটি একটি demo Telegram Mini App। এখানে কোনো real-money deposit,
+    withdrawal বা ব্যক্তিগত payment number-এ টাকা পাঠানোর ব্যবস্থা নেই।
+  </div>
+
+</section>
+
+
+<!-- PRODUCTS -->
+<section id="products" class="page">
+
+  <h2>🛍️ Products</h2>
+
+  <div class="product">
+    <div class="row">
+      <div>
+        <h3>Premium Package</h3>
+        <div class="small">Demo product package</div>
+      </div>
+      <div class="price">৳100</div>
+    </div>
+    <button class="btn" onclick="buyProduct('Premium Package',100)">
+      Place Order
+    </button>
+  </div>
+
+  <div class="product">
+    <div class="row">
+      <div>
+        <h3>Standard Package</h3>
+        <div class="small">Demo standard package</div>
+      </div>
+      <div class="price">৳50</div>
+    </div>
+    <button class="btn" onclick="buyProduct('Standard Package',50)">
+      Place Order
+    </button>
+  </div>
+
+  <div class="product">
+    <div class="row">
+      <div>
+        <h3>Basic Package</h3>
+        <div class="small">Demo basic package</div>
+      </div>
+      <div class="price">৳20</div>
+    </div>
+    <button class="btn" onclick="buyProduct('Basic Package',20)">
+      Place Order
+    </button>
+  </div>
+
+</section>
+
+
+<!-- ORDERS -->
+<section id="orders" class="page">
+
+  <h2>📦 My Orders</h2>
+
+  <div id="orderContainer" class="card">
+    <div class="empty">
+      <div style="font-size:40px">📦</div>
+      <h3>No orders yet</h3>
+      <p>আপনার order এখানে দেখা যাবে।</p>
+    </div>
+  </div>
+
+</section>
+
+
+<!-- PROFILE -->
+<section id="profile" class="page">
+
+  <h2>👤 Profile</h2>
+
+  <div class="card" style="text-align:center">
+
+    <div class="avatar" id="avatar">E</div>
+
+    <h2 id="profileName">Telegram User</h2>
+
+    <div class="small" id="profileUsername">
+      @username
     </div>
 
-    <!-- Pro Account Section -->
-    <div class="card" id="pro-card">
-        <h3>Upgrade to PRO 🚀</h3>
-        <p>Pro ইউজাররা পাবেন প্রতিটি এডে ২x ইনকাম!</p>
-        <p>ফি: <b>২৫০৳</b> (Send Money)</p>
-        <p>bKash / Nagad Personal: <b>01315606986</b></p>
-        
-        <select id="dep-method">
-            <option value="bKash">bKash</option>
-            <option value="Nagad">Nagad</option>
-        </select>
-        <input type="text" id="trx-id" placeholder="Transaction ID (TrxID)">
-        <button class="btn btn-pro" onclick="submitDeposit()">Submit Deposit</button>
+  </div>
+
+  <div class="card">
+
+    <div class="info">
+      <div class="small">Telegram ID</div>
+      <strong id="profileId">—</strong>
     </div>
 
-    <div class="card">
-        <h3>Watch & Earn Unlimited</h3>
-        <p>এড দেখুন এবং আনলিমিটেড পয়েন্ট আয় করুন!</p>
-        <button class="btn" id="ad-btn" onclick="watchAd()">Watch Ad</button>
-        <p id="timer-text" style="color:#f39c12; display:none;"></p>
+    <div class="info">
+      <div class="small">Username</div>
+      <strong id="profileUser">—</strong>
     </div>
 
-    <div class="card">
-        <h3>উইথড্র করুন</h3>
-        <select id="method">
-            <option value="bKash">bKash</option>
-            <option value="Nagad">Nagad</option>
-        </select>
-        <input type="text" id="number" placeholder="মোবাইল নম্বর">
-        <input type="number" id="points" placeholder="পয়েন্ট পরিমাণ (Min 1000)">
-        <button class="btn" style="background: #27ae60;" onclick="withdraw()">Withdraw Request</button>
+    <div class="info">
+      <div class="small">Account Status</div>
+      <strong>Active</strong>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+  </div>
 
-        const BACKEND_URL = "https://your-backend-url.onrender.com";
-        // Telegram validation safety: backend-এ initData পাঠাতে হয়
-        let initData = tg.initData;
-        let currentUser = tg.initDataUnsafe?.user || { id: 12345678, username: "TestUser" };
-        let adLink = "";
+</section>
 
-        async function loadUser() {
-            try {
-                let res = await fetch(`${BACKEND_URL}/api/user`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: currentUser.id, username: currentUser.username, initData })
-                });
-                let data = await res.json();
-                if (data.user) {
-                    document.getElementById('user-balance').innerText = data.user.balance;
-                    adLink = data.settings?.adLink || "";
+</div>
 
-                    if (data.user.isPro) {
-                        document.getElementById('pro-tag').style.display = 'inline-block';
-                        document.getElementById('pro-card').style.display = 'none';
-                    }
-                }
-            } catch (err) {
-                console.error("Server Error", err);
-                alert("ডেটা লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-            }
-        }
 
-        async function submitDeposit() {
-            let method = document.getElementById('dep-method').value;
-            let trxId = document.getElementById('trx-id').value.trim();
+<!-- NAVIGATION -->
+<div class="nav">
 
-            if (!trxId) {
-                alert("Transaction ID দিন!");
-                return;
-            }
+  <button id="navHome" class="active" onclick="openPage('home')">
+    🏠<br>Home
+  </button>
 
-            try {
-                let res = await fetch(`${BACKEND_URL}/api/deposit-pro`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: currentUser.id, method, trxId })
-                });
-                let data = await res.json();
+  <button id="navProducts" onclick="openPage('products')">
+    🛍️<br>Shop
+  </button>
 
-                if (data.success) {
-                    alert(data.message);
-                    document.getElementById('trx-id').value = "";
-                } else {
-                    alert(data.error || "সমস্যা হয়েছে!");
-                }
-            } catch (err) {
-                alert("সার্ভারে সমস্যা দেখা দিয়েছে।");
-            }
-        }
+  <button id="navOrders" onclick="openPage('orders')">
+    📦<br>Orders
+  </button>
 
-        function watchAd() {
-            if (!adLink) {
-                alert("Ad link not configured!");
-                return;
-            }
+  <button id="navProfile" onclick="openPage('profile')">
+    👤<br>Profile
+  </button>
 
-            window.open(adLink, '_blank');
+</div>
 
-            let btn = document.getElementById('ad-btn');
-            let timerText = document.getElementById('timer-text');
-            btn.disabled = true;
-            timerText.style.display = 'block';
 
-            let timeLeft = 10;
-            timerText.innerText = `${timeLeft} সেকেন্ড অপেক্ষা করুন...`;
+<script>
 
-            let countdown = setInterval(() => {
-                timeLeft--;
-                if (timeLeft > 0) {
-                    timerText.innerText = `${timeLeft} সেকেন্ড অপেক্ষা করুন...`;
-                } else {
-                    clearInterval(countdown);
-                    claimReward();
-                }
-            }, 1000);
-        }
+const tg = window.Telegram && window.Telegram.WebApp;
 
-        async function claimReward() {
-            let btn = document.getElementById('ad-btn');
-            let timerText = document.getElementById('timer-text');
+if(tg){
+  tg.ready();
+  tg.expand();
+}
 
-            try {
-                let res = await fetch(`${BACKEND_URL}/api/claim-ad`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: currentUser.id })
-                });
-                let data = await res.json();
-                
-                if (data.success) {
-                    document.getElementById('user-balance').innerText = data.newBalance;
-                    alert(data.message);
-                } else {
-                    alert(data.error || "পয়েন্ট ক্লেম করতে ব্যর্থ হয়েছেন!");
-                }
-            } catch (err) {
-                alert("নেটওয়ার্ক সমস্যা!");
-            } finally {
-                btn.disabled = false;
-                timerText.style.display = 'none';
-            }
-        }
 
-        async function withdraw() {
-            let method = document.getElementById('method').value;
-            let number = document.getElementById('number').value.trim();
-            let points = parseInt(document.getElementById('points').value);
+/* Telegram user */
+let telegramUser = null;
 
-            if (!number || isNaN(points)) {
-                alert("সবগুলো তথ্য সঠিকভাবে দিন!");
-                return;
-            }
+if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
+  telegramUser = tg.initDataUnsafe.user;
+}
 
-            if (points < 1000) {
-                alert("সর্বনিম্ন ১০০০ পয়েন্ট উইথড্র করা যাবে!");
-                return;
-            }
 
-            try {
-                let res = await fetch(`${BACKEND_URL}/api/withdraw`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: currentUser.id, method, number, amount: points })
-                });
-                let data = await res.json();
+/* Demo fallback */
+if(!telegramUser){
+  telegramUser = {
+    id:"Preview",
+    first_name:"EMAMUL",
+    last_name:"",
+    username:"demo_user"
+  };
+}
 
-                if (data.success) {
-                    alert(data.message);
-                    document.getElementById('user-balance').innerText = data.newBalance;
-                    document.getElementById('points').value = "";
-                } else {
-                    alert(data.error);
-                }
-            } catch (err) {
-                alert("সার্ভারে অনুরোধ পাঠানো যায়নি।");
-            }
-        }
 
-        loadUser();
-    </script>
+/* User information */
+const fullName =
+  (telegramUser.first_name || "") +
+  (telegramUser.last_name ? " " + telegramUser.last_name : "");
+
+document.getElementById("welcomeName").textContent =
+  fullName || "Telegram User";
+
+document.getElementById("telegramId").textContent =
+  telegramUser.id ? "ID " + telegramUser.id : "Guest";
+
+document.getElementById("profileName").textContent =
+  fullName || "Telegram User";
+
+document.getElementById("profileId").textContent =
+  telegramUser.id || "—";
+
+document.getElementById("profileUser").textContent =
+  telegramUser.username ? "@" + telegramUser.username : "No username";
+
+document.getElementById("profileUsername").textContent =
+  telegramUser.username ? "@" + telegramUser.username : "Telegram User";
+
+if(fullName){
+  document.getElementById("avatar").textContent =
+    fullName.charAt(0).toUpperCase();
+}
+
+
+/* Page navigation */
+function openPage(page){
+
+  document.querySelectorAll(".page")
+    .forEach(p => p.classList.remove("active"));
+
+  document.getElementById(page)
+    .classList.add("active");
+
+  document.querySelectorAll(".nav button")
+    .forEach(b => b.classList.remove("active"));
+
+  const nav = {
+    home:"navHome",
+    products:"navProducts",
+    orders:"navOrders",
+    profile:"navProfile"
+  };
+
+  if(nav[page]){
+    document.getElementById(nav[page])
+      .classList.add("active");
+  }
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+}
+
+
+/* Local demo orders */
+let orders = JSON.parse(
+  localStorage.getItem("emamul_orders") || "[]"
+);
+
+
+function buyProduct(name,price){
+
+  const order = {
+    id:Date.now(),
+    name:name,
+    price:price,
+    status:"Demo Order",
+    date:new Date().toLocaleString()
+  };
+
+  orders.unshift(order);
+
+  localStorage.setItem(
+    "emamul_orders",
+    JSON.stringify(orders)
+  );
+
+  alert(
+    "Order created successfully!\n\n" +
+    "Product: " + name +
+    "\nAmount: ৳" + price +
+    "\n\nDemo order only."
+  );
+
+  renderOrders();
+
+  openPage("orders");
+}
+
+
+/* Render orders */
+function renderOrders(){
+
+  const container =
+    document.getElementById("orderContainer");
+
+  if(!orders.length){
+
+    container.innerHTML = `
+      <div class="empty">
+        <div style="font-size:40px">📦</div>
+        <h3>No orders yet</h3>
+        <p>আপনার order এখানে দেখা যাবে।</p>
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML = orders.map(order => `
+
+    <div style="
+      padding:15px 0;
+      border-bottom:1px solid #30404e;
+    ">
+
+      <div class="row">
+
+        <strong>${escapeHTML(order.name)}</strong>
+
+        <span style="
+          background:#30485c;
+          padding:5px 9px;
+          border-radius:20px;
+          font-size:12px;
+        ">
+          ${escapeHTML(order.status)}
+        </span>
+
+      </div>
+
+      <div class="small" style="margin-top:8px">
+        Order #${order.id}
+      </div>
+
+      <div class="small">
+        ${escapeHTML(order.date)}
+      </div>
+
+      <div style="
+        margin-top:8px;
+        font-weight:bold;
+        color:#55b2ff;
+      ">
+        ৳${Number(order.price).toFixed(2)}
+      </div>
+
+    </div>
+
+  `).join("");
+}
+
+
+/* Safe text */
+function escapeHTML(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+
+/* About */
+function showNotice(){
+
+  alert(
+    "EMAMUL 2.0\n\n" +
+    "Telegram Mini App demo.\n" +
+    "Products এবং demo orders ব্যবস্থাপনার জন্য তৈরি।"
+  );
+
+}
+
+
+/* Initial orders */
+renderOrders();
+
+</script>
+
 </body>
 </html>
