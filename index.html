@@ -12,8 +12,8 @@
         .badge-pro { background: #f39c12; color: #000; padding: 3px 8px; border-radius: 5px; font-size: 14px; font-weight: bold; }
         .btn { background: #e94560; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
         .btn-pro { background: #f1c40f; color: #000; }
-        .btn:disabled { background: #555; }
-        input, select { width: 90%; padding: 10px; margin: 8px 0; border-radius: 5px; border: none; }
+        .btn:disabled { background: #555; cursor: not-allowed; }
+        input, select { width: 90%; padding: 10px; margin: 8px 0; border-radius: 5px; border: none; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -44,7 +44,7 @@
         <h3>Watch & Earn Unlimited</h3>
         <p>এড দেখুন এবং আনলিমিটেড পয়েন্ট আয় করুন!</p>
         <button class="btn" id="ad-btn" onclick="watchAd()">Watch Ad</button>
-        <p id="timer-text" style="color:#f39c12; display:none;">১০ সেকেন্ড অপেক্ষা করুন...</p>
+        <p id="timer-text" style="color:#f39c12; display:none;"></p>
     </div>
 
     <div class="card">
@@ -62,8 +62,9 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Render-এ হোস্ট করার পর পাওয়া URL পরবর্তীতে এখানে বসাবো
         const BACKEND_URL = "https://your-backend-url.onrender.com";
+        // Telegram validation safety: backend-এ initData পাঠাতে হয়
+        let initData = tg.initData;
         let currentUser = tg.initDataUnsafe?.user || { id: 12345678, username: "TestUser" };
         let adLink = "";
 
@@ -72,42 +73,49 @@
                 let res = await fetch(`${BACKEND_URL}/api/user`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: currentUser.id, username: currentUser.username })
+                    body: JSON.stringify({ userId: currentUser.id, username: currentUser.username, initData })
                 });
                 let data = await res.json();
-                document.getElementById('user-balance').innerText = data.user.balance;
-                adLink = data.settings.adLink;
+                if (data.user) {
+                    document.getElementById('user-balance').innerText = data.user.balance;
+                    adLink = data.settings?.adLink || "";
 
-                if (data.user.isPro) {
-                    document.getElementById('pro-tag').style.display = 'inline-block';
-                    document.getElementById('pro-card').style.display = 'none';
+                    if (data.user.isPro) {
+                        document.getElementById('pro-tag').style.display = 'inline-block';
+                        document.getElementById('pro-card').style.display = 'none';
+                    }
                 }
             } catch (err) {
                 console.error("Server Error", err);
+                alert("ডেটা লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
             }
         }
 
         async function submitDeposit() {
             let method = document.getElementById('dep-method').value;
-            let trxId = document.getElementById('trx-id').value;
+            let trxId = document.getElementById('trx-id').value.trim();
 
             if (!trxId) {
                 alert("Transaction ID দিন!");
                 return;
             }
 
-            let res = await fetch(`${BACKEND_URL}/api/deposit-pro`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: currentUser.id, method, trxId })
-            });
-            let data = await res.json();
+            try {
+                let res = await fetch(`${BACKEND_URL}/api/deposit-pro`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: currentUser.id, method, trxId })
+                });
+                let data = await res.json();
 
-            if (data.success) {
-                alert(data.message);
-                document.getElementById('trx-id').value = "";
-            } else {
-                alert(data.error);
+                if (data.success) {
+                    alert(data.message);
+                    document.getElementById('trx-id').value = "";
+                } else {
+                    alert(data.error || "সমস্যা হয়েছে!");
+                }
+            } catch (err) {
+                alert("সার্ভারে সমস্যা দেখা দিয়েছে।");
             }
         }
 
@@ -124,7 +132,25 @@
             btn.disabled = true;
             timerText.style.display = 'block';
 
-            setTimeout(async () => {
+            let timeLeft = 10;
+            timerText.innerText = `${timeLeft} সেকেন্ড অপেক্ষা করুন...`;
+
+            let countdown = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    timerText.innerText = `${timeLeft} সেকেন্ড অপেক্ষা করুন...`;
+                } else {
+                    clearInterval(countdown);
+                    claimReward();
+                }
+            }, 1000);
+        }
+
+        async function claimReward() {
+            let btn = document.getElementById('ad-btn');
+            let timerText = document.getElementById('timer-text');
+
+            try {
                 let res = await fetch(`${BACKEND_URL}/api/claim-ad`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -135,34 +161,49 @@
                 if (data.success) {
                     document.getElementById('user-balance').innerText = data.newBalance;
                     alert(data.message);
+                } else {
+                    alert(data.error || "পয়েন্ট ক্লেম করতে ব্যর্থ হয়েছেন!");
                 }
+            } catch (err) {
+                alert("নেটওয়ার্ক সমস্যা!");
+            } finally {
                 btn.disabled = false;
                 timerText.style.display = 'none';
-            }, 10000);
+            }
         }
 
         async function withdraw() {
             let method = document.getElementById('method').value;
-            let number = document.getElementById('number').value;
+            let number = document.getElementById('number').value.trim();
             let points = parseInt(document.getElementById('points').value);
 
-            if (!number || !points) {
+            if (!number || isNaN(points)) {
                 alert("সবগুলো তথ্য সঠিকভাবে দিন!");
                 return;
             }
 
-            let res = await fetch(`${BACKEND_URL}/api/withdraw`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: currentUser.id, method, number, amount: points })
-            });
-            let data = await res.json();
+            if (points < 1000) {
+                alert("সর্বনিম্ন ১০০০ পয়েন্ট উইথড্র করা যাবে!");
+                return;
+            }
 
-            if (data.success) {
-                alert(data.message);
-                document.getElementById('user-balance').innerText = data.newBalance;
-            } else {
-                alert(data.error);
+            try {
+                let res = await fetch(`${BACKEND_URL}/api/withdraw`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: currentUser.id, method, number, amount: points })
+                });
+                let data = await res.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    document.getElementById('user-balance').innerText = data.newBalance;
+                    document.getElementById('points').value = "";
+                } else {
+                    alert(data.error);
+                }
+            } catch (err) {
+                alert("সার্ভারে অনুরোধ পাঠানো যায়নি।");
             }
         }
 
